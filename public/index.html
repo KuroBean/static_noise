@@ -3,13 +3,22 @@
 <head>
   <title>Static Noise Video</title>
   <style>
-    canvas {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #container {
+      display: flex;
+    }
+
+    #canvas {
       border: 1px solid #000;
-      float: left;
+      flex-grow: 1;
     }
 
     .inputs {
-      float: left;
+      width: 200px;
       margin-left: 20px;
     }
 
@@ -20,36 +29,45 @@
   </style>
 </head>
 <body>
-  <canvas id="canvas" width="700" height="700"></canvas>
-  <div class="inputs">
-    <label for="frameRateInput">Frame Rate:</label>
-    <input type="number" id="frameRateInput" min="1" step="1" value="24">
-    <br>
-    <label for="squareSizeInput">Square Size:</label>
-    <input type="number" id="squareSizeInput" min="1" step="1" value="10">
-    <br>
-    <label for="widthInput">Width:</label>
-    <input type="number" id="widthInput" min="1" step="50" value="700">
+  <div id="container">
+    <canvas id="canvas"></canvas>
+    <div class="inputs">
+      <label for="frameRateInput">Frame Rate:</label>
+      <input type="number" id="frameRateInput" min="1" step="1" value="24">
+      <br>
+      <label for="squareSizeInput">Square Size:</label>
+      <input type="number" id="squareSizeInput" min="1" step="1" value="10">
+    </div>
   </div>
+
   <script>
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
-    var imageData = ctx.createImageData(canvas.width, canvas.height);
-    var data = imageData.data;
+    var imageData = null;
+    var data = null;
+    var frameRateInput = document.getElementById('frameRateInput');
+    var squareSizeInput = document.getElementById('squareSizeInput');
+    var intervalId = null;
+
+    function adjustCanvasSize() {
+      var containerWidth = document.getElementById('container').offsetWidth;
+      var inputsWidth = document.querySelector('.inputs').offsetWidth;
+      var canvasWidth = containerWidth - inputsWidth;
+      var canvasHeight = window.innerHeight;
+
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      imageData = ctx.createImageData(canvasWidth, canvasHeight);
+      data = imageData.data;
+    }
 
     function drawStatic() {
-      var width = parseInt(document.getElementById('widthInput').value);
+      var width = canvas.width;
       var height = canvas.height;
-
-      canvas.width = width;
-      ctx.clearRect(0, 0, width, height);
-      imageData = ctx.createImageData(width, height);
-      data = imageData.data;
-
       var length = width * height * 4;
 
-      var frameRate = parseInt(document.getElementById('frameRateInput').value);
-      var squareSize = parseInt(document.getElementById('squareSizeInput').value);
+      var frameRate = parseInt(frameRateInput.value);
+      var squareSize = parseInt(squareSizeInput.value);
 
       for (var i = 0; i < length; i += 4) {
         var x = (i / 4) % width;
@@ -78,23 +96,24 @@
       ctx.putImageData(imageData, 0, 0);
     }
 
-    var frameRateInput = document.getElementById('frameRateInput');
+    window.addEventListener('resize', function() {
+      clearInterval(intervalId);
+      adjustCanvasSize();
+      intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+      drawStatic();
+    });
+
     frameRateInput.addEventListener('input', function() {
       clearInterval(intervalId);
       intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+      drawStatic();
     });
 
-    var squareSizeInput = document.getElementById('squareSizeInput');
     squareSizeInput.addEventListener('input', drawStatic);
 
-    var widthInput = document.getElementById('widthInput');
-    widthInput.addEventListener('input', function() {
-      clearInterval(intervalId);
-      drawStatic();
-      intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
-    });
-
-    var intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+    adjustCanvasSize();
+    intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+    drawStatic();
   </script>
 </body>
 </html>
