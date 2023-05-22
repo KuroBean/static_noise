@@ -5,31 +5,96 @@
   <style>
     canvas {
       border: 1px solid #000;
+      float: left;
+    }
+
+    .inputs {
+      float: left;
+      margin-left: 20px;
+    }
+
+    .inputs label {
+      display: block;
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas" width="700" height="700"></canvas>
+  <div class="inputs">
+    <label for="frameRateInput">Frame Rate:</label>
+    <input type="number" id="frameRateInput" min="1" step="1" value="24">
+    <br>
+    <label for="squareSizeInput">Square Size:</label>
+    <input type="number" id="squareSizeInput" min="1" step="1" value="10">
+    <br>
+    <label for="widthInput">Width:</label>
+    <input type="number" id="widthInput" min="1" step="50" value="700">
+  </div>
   <script>
-    var squareSize = 1; // Adjust the square size as desired
-    var frameRate = 60; // Adjust the frame rate as desired
-
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
+    var imageData = ctx.createImageData(canvas.width, canvas.height);
+    var data = imageData.data;
 
     function drawStatic() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var width = parseInt(document.getElementById('widthInput').value);
+      var height = canvas.height;
 
-      for (var x = 0; x < canvas.width; x += squareSize) {
-        for (var y = 0; y < canvas.height; y += squareSize) {
-          var color = Math.random() < 0.5 ? '#000' : '#FFF';
-          ctx.fillStyle = color;
-          ctx.fillRect(x, y, squareSize, squareSize);
+      canvas.width = width;
+      ctx.clearRect(0, 0, width, height);
+      imageData = ctx.createImageData(width, height);
+      data = imageData.data;
+
+      var length = width * height * 4;
+
+      var frameRate = parseInt(document.getElementById('frameRateInput').value);
+      var squareSize = parseInt(document.getElementById('squareSizeInput').value);
+
+      for (var i = 0; i < length; i += 4) {
+        var x = (i / 4) % width;
+        var y = Math.floor((i / 4) / width);
+
+        var squareX = Math.floor(x / squareSize);
+        var squareY = Math.floor(y / squareSize);
+
+        var cornerX = squareX * squareSize;
+        var cornerY = squareY * squareSize;
+
+        var color;
+        if (x === cornerX && y === cornerY) {
+          color = Math.random() < 0.5 ? 0 : 255; // 0 for black, 255 for white
+        } else {
+          var cornerIndex = (cornerY * width + cornerX) * 4;
+          color = data[cornerIndex]; // Use the color of the upper-left corner pixel
         }
+
+        data[i] = color; // Red channel
+        data[i + 1] = color; // Green channel
+        data[i + 2] = color; // Blue channel
+        data[i + 3] = 255; // Alpha channel
       }
+
+      ctx.putImageData(imageData, 0, 0);
     }
 
-    setInterval(drawStatic, 1000 / frameRate);
+    var frameRateInput = document.getElementById('frameRateInput');
+    frameRateInput.addEventListener('input', function() {
+      clearInterval(intervalId);
+      intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+    });
+
+    var squareSizeInput = document.getElementById('squareSizeInput');
+    squareSizeInput.addEventListener('input', drawStatic);
+
+    var widthInput = document.getElementById('widthInput');
+    widthInput.addEventListener('input', function() {
+      clearInterval(intervalId);
+      drawStatic();
+      intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
+    });
+
+    var intervalId = setInterval(drawStatic, 1000 / frameRateInput.value);
   </script>
 </body>
 </html>
