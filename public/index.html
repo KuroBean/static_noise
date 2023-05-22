@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Static Noise Video</title>
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="700" height="700"></canvas>
+  <script>
+    var squareSize = 1; // Adjust the square size as desired
+    var frameRate = 60; // Adjust the frame rate as desired
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    function drawStatic() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (var x = 0; x < canvas.width; x += squareSize) {
+        for (var y = 0; y < canvas.height; y += squareSize) {
+          var color = Math.random() < 0.5 ? '#000' : '#FFF';
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, squareSize, squareSize);
+        }
+      }
+    }
+
+    setInterval(drawStatic, 1000 / frameRate);
+  </script>
+</body>
+</html>
